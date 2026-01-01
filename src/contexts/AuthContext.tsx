@@ -1,4 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
+import { authAPI } from '@/lib/api';
 import { User, UserRole } from '@/types';
 
 interface AuthContextType {
@@ -6,78 +16,86 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, photoUrl: string, role: UserRole) => Promise<boolean>;
-  loginWithGoogle: () => Promise<boolean>;
+  loginWithGoogle: () => Promise<{ success: boolean; isNewUser: boolean }>;
   logout: () => void;
   updateUserCoins: (newCoins: number) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users database
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@microtask.com',
-    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
-    role: 'admin',
-    coins: 1000,
-    createdAt: new Date(),
-  },
-  {
-    id: '2',
-    name: 'John Worker',
-    email: 'worker@test.com',
-    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
-    role: 'worker',
-    coins: 250,
-    createdAt: new Date(),
-  },
-  {
-    id: '3',
-    name: 'Sarah Buyer',
-    email: 'buyer@test.com',
-    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
-    role: 'buyer',
-    coins: 500,
-    createdAt: new Date(),
-  },
-];
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check for existing session on mount
   useEffect(() => {
-    // Check for existing session
-    const storedUser = localStorage.getItem('microtask_user');
-    const token = localStorage.getItem('microtask_token');
-    
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const checkAuth = async () => {
+      const token = localStorage.getItem('microtask_token');
+      const storedUser = localStorage.getItem('microtask_user');
+
+      if (token && storedUser) {
+        try {
+          // Verify token with backend
+          const response = await authAPI.verify();
+          const userData = response.data.user;
+          setUser({
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            photoUrl: userData.photoUrl,
+            role: userData.role,
+            coins: userData.coins,
+            createdAt: new Date(userData.createdAt),
+          });
+        } catch (error) {
+          // Token invalid, clear storage
+          localStorage.removeItem('microtask_token');
+          localStorage.removeItem('microtask_user');
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    
-    if (foundUser && password === 'password123') {
-      const token = `token_${Date.now()}`;
+
+    try {
+      // Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      // Login with backend
+      const response = await authAPI.login({
+        email: firebaseUser.email!,
+        firebaseUid: firebaseUser.uid,
+      });
+
+      const { token, user: userData } = response.data;
+
       localStorage.setItem('microtask_token', token);
-      localStorage.setItem('microtask_user', JSON.stringify(foundUser));
-      setUser(foundUser);
+      localStorage.setItem('microtask_user', JSON.stringify(userData));
+
+      setUser({
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        photoUrl: userData.photoUrl,
+        role: userData.role,
+        coins: userData.coins,
+        createdAt: new Date(userData.createdAt),
+      });
+
       setIsLoading(false);
       return true;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setIsLoading(false);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
   const register = async (
@@ -88,64 +106,91 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     role: UserRole
   ): Promise<boolean> => {
     setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if user exists
-    const existingUser = mockUsers.find(u => u.email === email);
-    if (existingUser) {
+
+    try {
+      // Create user in Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      // Register with backend
+      const response = await authAPI.register({
+        name,
+        email,
+        photoUrl: photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+        role,
+        firebaseUid: firebaseUser.uid,
+      });
+
+      const { token, user: userData } = response.data;
+
+      localStorage.setItem('microtask_token', token);
+      localStorage.setItem('microtask_user', JSON.stringify(userData));
+
+      setUser({
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        photoUrl: userData.photoUrl,
+        role: userData.role,
+        coins: userData.coins,
+        createdAt: new Date(userData.createdAt),
+      });
+
+      setIsLoading(false);
+      return true;
+    } catch (error: any) {
+      console.error('Registration error:', error);
       setIsLoading(false);
       return false;
     }
-    
-    const newUser: User = {
-      id: `${Date.now()}`,
-      name,
-      email,
-      photoUrl: photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-      role,
-      coins: role === 'worker' ? 10 : 50, // Workers get 10, Buyers get 50
-      createdAt: new Date(),
-    };
-    
-    mockUsers.push(newUser);
-    
-    const token = `token_${Date.now()}`;
-    localStorage.setItem('microtask_token', token);
-    localStorage.setItem('microtask_user', JSON.stringify(newUser));
-    setUser(newUser);
-    setIsLoading(false);
-    return true;
   };
 
-  const loginWithGoogle = async (): Promise<boolean> => {
+  const loginWithGoogle = async (): Promise<{ success: boolean; isNewUser: boolean }> => {
     setIsLoading(true);
-    
-    // Simulate Google OAuth
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const googleUser: User = {
-      id: `google_${Date.now()}`,
-      name: 'Google User',
-      email: `user${Date.now()}@gmail.com`,
-      photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=google',
-      role: 'worker',
-      coins: 10,
-      createdAt: new Date(),
-    };
-    
-    mockUsers.push(googleUser);
-    
-    const token = `google_token_${Date.now()}`;
-    localStorage.setItem('microtask_token', token);
-    localStorage.setItem('microtask_user', JSON.stringify(googleUser));
-    setUser(googleUser);
-    setIsLoading(false);
-    return true;
+
+    try {
+      // Sign in with Google
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
+
+      // Login/Register with backend
+      const response = await authAPI.googleLogin({
+        name: firebaseUser.displayName || 'Google User',
+        email: firebaseUser.email!,
+        photoUrl: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=google`,
+        firebaseUid: firebaseUser.uid,
+      });
+
+      const { token, user: userData, isNewUser } = response.data;
+
+      localStorage.setItem('microtask_token', token);
+      localStorage.setItem('microtask_user', JSON.stringify(userData));
+
+      setUser({
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        photoUrl: userData.photoUrl,
+        role: userData.role,
+        coins: userData.coins,
+        createdAt: new Date(userData.createdAt),
+      });
+
+      setIsLoading(false);
+      return { success: true, isNewUser: isNewUser || false };
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      setIsLoading(false);
+      return { success: false, isNewUser: false };
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Firebase signout error:', error);
+    }
     localStorage.removeItem('microtask_token');
     localStorage.removeItem('microtask_user');
     setUser(null);
@@ -159,8 +204,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await authAPI.verify();
+      const userData = response.data.user;
+      const updatedUser = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        photoUrl: userData.photoUrl,
+        role: userData.role,
+        coins: userData.coins,
+        createdAt: new Date(userData.createdAt),
+      };
+      setUser(updatedUser);
+      localStorage.setItem('microtask_user', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Refresh user error:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, loginWithGoogle, logout, updateUserCoins }}>
+    <AuthContext.Provider value={{
+      user,
+      isLoading,
+      login,
+      register,
+      loginWithGoogle,
+      logout,
+      updateUserCoins,
+      refreshUser
+    }}>
       {children}
     </AuthContext.Provider>
   );

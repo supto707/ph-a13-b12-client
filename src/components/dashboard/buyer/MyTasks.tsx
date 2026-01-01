@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Coins, Calendar, Users, Pencil, Trash2 } from 'lucide-react';
+import { taskAPI } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { Coins, Calendar, Users, Pencil, Trash2, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,53 +14,104 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-
-const mockTasks = [
-  { id: '1', title: 'Watch YouTube Video', detail: 'Watch and comment on video', requiredWorkers: 50, payableAmount: 10, completionDate: new Date('2024-02-15'), submissionInfo: 'Screenshot required' },
-  { id: '2', title: 'Complete Survey', detail: 'Fill out customer survey', requiredWorkers: 100, payableAmount: 15, completionDate: new Date('2024-02-20'), submissionInfo: 'Response ID required' },
-  { id: '3', title: 'App Download & Review', detail: 'Download app and leave review', requiredWorkers: 30, payableAmount: 25, completionDate: new Date('2024-02-18'), submissionInfo: 'Screenshot of review' },
-];
+import { Task } from '@/types';
 
 const MyTasks = () => {
-  const { user, updateUserCoins } = useAuth();
+  const { refreshUser } = useAuth();
   const { toast } = useToast();
-  const [tasks, setTasks] = useState(mockTasks);
-  const [editingTask, setEditingTask] = useState<typeof mockTasks[0] | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await taskAPI.getBuyerTasks();
+        setTasks(response.data);
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const handleEdit = (task: typeof mockTasks[0]) => {
+  const handleEdit = (task: Task) => {
     setEditingTask({ ...task });
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = () => {
-    if (editingTask) {
+  const handleSaveEdit = async () => {
+    if (!editingTask) return;
+
+    setProcessingId(editingTask.id);
+    try {
+      await taskAPI.update(editingTask.id, {
+        title: editingTask.title,
+        detail: editingTask.detail,
+        submissionInfo: editingTask.submissionInfo,
+      });
+
       setTasks(tasks.map(t => t.id === editingTask.id ? editingTask : t));
       toast({
         title: 'Task Updated',
         description: 'Your task has been updated successfully.',
       });
       setIsEditModalOpen(false);
+    } catch (error: any) {
+      console.error('Failed to update task:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to update task',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
     }
   };
 
-  const handleDelete = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      const refund = task.requiredWorkers * task.payableAmount;
-      updateUserCoins((user?.coins || 0) + refund);
+  const handleDelete = async (taskId: string) => {
+    if (!confirm('Are you sure you want to delete this task? You will receive a refund for remaining workers.')) {
+      return;
+    }
+
+    setProcessingId(taskId);
+    try {
+      const response = await taskAPI.delete(taskId);
       setTasks(tasks.filter(t => t.id !== taskId));
+      await refreshUser();
+
       toast({
         title: 'Task Deleted',
-        description: `Task deleted and ${refund} coins have been refunded.`,
+        description: `Task deleted and ${response.data.refundedCoins} coins have been refunded.`,
       });
+    } catch (error: any) {
+      console.error('Failed to delete task:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to delete task',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -108,11 +161,25 @@ const MyTasks = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(task)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(task)}
+                            disabled={processingId === task.id}
+                          >
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(task.id)}>
-                            <Trash2 className="w-4 h-4" />
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(task.id)}
+                            disabled={processingId === task.id}
+                          >
+                            {processingId === task.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </Button>
                         </div>
                       </td>
@@ -161,7 +228,14 @@ const MyTasks = () => {
                   onChange={(e) => setEditingTask({ ...editingTask, submissionInfo: e.target.value })}
                 />
               </div>
-              <Button className="w-full" onClick={handleSaveEdit}>
+              <Button
+                className="w-full"
+                onClick={handleSaveEdit}
+                disabled={processingId === editingTask.id}
+              >
+                {processingId === editingTask.id ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : null}
                 Save Changes
               </Button>
             </div>

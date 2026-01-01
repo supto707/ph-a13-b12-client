@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import WorkerHome from '@/components/dashboard/worker/WorkerHome';
 import TaskList from '@/components/dashboard/worker/TaskList';
+import TaskDetails from '@/components/dashboard/worker/TaskDetails';
 import MySubmissions from '@/components/dashboard/worker/MySubmissions';
 import Withdrawals from '@/components/dashboard/worker/Withdrawals';
 import BuyerHome from '@/components/dashboard/buyer/BuyerHome';
@@ -55,20 +56,21 @@ const Dashboard = () => {
     <DashboardLayout>
       <Routes>
         <Route index element={<Navigate to={getDefaultRoute()} replace />} />
-        
+
         {/* Worker Routes */}
         <Route path="worker-home" element={<WorkerHome />} />
         <Route path="task-list" element={<TaskList />} />
+        <Route path="task/:id" element={<TaskDetails />} />
         <Route path="my-submissions" element={<MySubmissions />} />
         <Route path="withdrawals" element={<Withdrawals />} />
-        
+
         {/* Buyer Routes */}
         <Route path="buyer-home" element={<BuyerHome />} />
         <Route path="add-task" element={<AddTask />} />
         <Route path="my-tasks" element={<MyTasks />} />
         <Route path="purchase-coins" element={<PurchaseCoins />} />
         <Route path="payment-history" element={<PaymentHistory />} />
-        
+
         {/* Admin Routes */}
         <Route path="admin-home" element={<AdminHome />} />
         <Route path="manage-users" element={<ManageUsers />} />

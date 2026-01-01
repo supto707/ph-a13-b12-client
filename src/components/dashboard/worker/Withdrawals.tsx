@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,15 +11,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
-import { Coins, DollarSign, Wallet, AlertCircle } from 'lucide-react';
+import { withdrawalAPI } from '@/lib/api';
+import { Coins, DollarSign, Wallet, AlertCircle, Loader2, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Withdrawal } from '@/types';
 
 const Withdrawals = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [coinToWithdraw, setCoinToWithdraw] = useState('');
   const [paymentSystem, setPaymentSystem] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 20 coins = 1 dollar, minimum 200 coins (10 dollars)
   const coinsValue = Number(coinToWithdraw) || 0;
@@ -27,7 +32,22 @@ const Withdrawals = () => {
   const hasEnoughCoins = (user?.coins || 0) >= 200;
   const isValidWithdraw = coinsValue >= 200 && coinsValue <= (user?.coins || 0);
 
-  const handleWithdraw = () => {
+  useEffect(() => {
+    const fetchWithdrawals = async () => {
+      try {
+        const response = await withdrawalAPI.getWorkerWithdrawals();
+        setWithdrawals(response.data);
+      } catch (error) {
+        console.error('Failed to fetch withdrawals:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWithdrawals();
+  }, []);
+
+  const handleWithdraw = async () => {
     if (!isValidWithdraw || !paymentSystem || !accountNumber) {
       toast({
         title: 'Error',
@@ -37,14 +57,41 @@ const Withdrawals = () => {
       return;
     }
 
-    toast({
-      title: 'Withdrawal Request Submitted',
-      description: `Your withdrawal of $${withdrawAmount.toFixed(2)} is being processed.`,
-    });
+    setIsSubmitting(true);
+    try {
+      await withdrawalAPI.create({
+        withdrawalCoin: coinsValue,
+        paymentSystem,
+        accountNumber,
+      });
 
-    setCoinToWithdraw('');
-    setPaymentSystem('');
-    setAccountNumber('');
+      toast({
+        title: 'Withdrawal Request Submitted',
+        description: `Your withdrawal of $${withdrawAmount.toFixed(2)} is pending approval.`,
+      });
+
+      // Refresh user and withdrawals
+      await refreshUser();
+      const response = await withdrawalAPI.getWorkerWithdrawals();
+      setWithdrawals(response.data);
+
+      setCoinToWithdraw('');
+      setPaymentSystem('');
+      setAccountNumber('');
+    } catch (error: any) {
+      console.error('Withdrawal error:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to submit withdrawal request',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return (
@@ -177,16 +224,73 @@ const Withdrawals = () => {
               </div>
 
               <Button
-                className="w-full"
+                className="w-full gap-2"
                 onClick={handleWithdraw}
-                disabled={!isValidWithdraw || !paymentSystem || !accountNumber}
+                disabled={!isValidWithdraw || !paymentSystem || !accountNumber || isSubmitting}
               >
-                Request Withdrawal
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Wallet className="w-4 h-4" />
+                )}
+                {isSubmitting ? 'Processing...' : 'Request Withdrawal'}
               </Button>
             </>
           )}
         </CardContent>
       </Card>
+
+      {/* Withdrawal History */}
+      {withdrawals.length > 0 && (
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="font-display">Withdrawal History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Coins</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Amount</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Method</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {withdrawals.map((withdrawal) => (
+                    <tr key={withdrawal.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                      <td className="py-3 px-4 text-muted-foreground">{formatDate(withdrawal.createdAt)}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1">
+                          <Coins className="w-4 h-4 text-accent" />
+                          {withdrawal.withdrawalCoin}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-medium">${withdrawal.withdrawalAmount.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-muted-foreground capitalize">{withdrawal.paymentSystem}</td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium capitalize ${withdrawal.status === 'approved'
+                            ? 'bg-success/10 text-success'
+                            : 'bg-accent/10 text-accent'
+                          }`}>
+                          {withdrawal.status === 'approved' ? (
+                            <CheckCircle className="w-3 h-3" />
+                          ) : (
+                            <Clock className="w-3 h-3" />
+                          )}
+                          {withdrawal.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

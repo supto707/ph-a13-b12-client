@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { ClipboardList, Clock, Coins, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { statsAPI, submissionAPI } from '@/lib/api';
+import { ClipboardList, Clock, Coins, CheckCircle, XCircle, Eye, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,53 +11,107 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Submission } from '@/types';
 
-const mockSubmissions = [
-  { id: 1, workerName: 'John Worker', taskTitle: 'Watch YouTube Video', payableAmount: 10, submissionDetails: 'I watched the full video and left a comment. Screenshot: https://example.com/proof.jpg', status: 'pending' },
-  { id: 2, workerName: 'Jane Doe', taskTitle: 'Complete Survey', payableAmount: 15, submissionDetails: 'Survey completed successfully. Response ID: SR-12345', status: 'pending' },
-  { id: 3, workerName: 'Mike Smith', taskTitle: 'App Review', payableAmount: 20, submissionDetails: 'Posted 5-star review with detailed feedback. Username: mikesmith123', status: 'pending' },
-];
+interface BuyerStats {
+  totalTasks: number;
+  pendingTasks: number;
+  totalPayment: number;
+}
 
 const BuyerHome = () => {
-  const { user, updateUserCoins } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
-  const [submissions, setSubmissions] = useState(mockSubmissions);
-  const [selectedSubmission, setSelectedSubmission] = useState<typeof mockSubmissions[0] | null>(null);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [stats, setStats] = useState<BuyerStats>({ totalTasks: 0, pendingTasks: 0, totalPayment: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Mock stats
-  const stats = {
-    totalTasks: 15,
-    pendingTasks: 120,
-    totalPayments: 2500,
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsRes, submissionsRes] = await Promise.all([
+          statsAPI.getBuyer(),
+          submissionAPI.getBuyerSubmissions()
+        ]);
+        setStats(statsRes.data);
+        setSubmissions(submissionsRes.data);
+      } catch (error) {
+        console.error('Failed to fetch buyer data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleApprove = (submissionId: number) => {
-    const submission = submissions.find(s => s.id === submissionId);
-    if (submission) {
+    fetchData();
+  }, []);
+
+  const handleApprove = async (submissionId: string) => {
+    setProcessingId(submissionId);
+    try {
+      await submissionAPI.approve(submissionId);
+
+      const submission = submissions.find(s => s.id === submissionId);
       setSubmissions(submissions.filter(s => s.id !== submissionId));
+
       toast({
         title: 'Submission Approved',
-        description: `Payment of ${submission.payableAmount} coins sent to ${submission.workerName}`,
+        description: `Payment of ${submission?.payableAmount} coins sent to ${submission?.workerName}`,
       });
+
+      await refreshUser();
+    } catch (error: any) {
+      console.error('Failed to approve:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to approve submission',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+      setIsModalOpen(false);
     }
-    setIsModalOpen(false);
   };
 
-  const handleReject = (submissionId: number) => {
-    setSubmissions(submissions.filter(s => s.id !== submissionId));
-    toast({
-      title: 'Submission Rejected',
-      description: 'The worker has been notified',
-      variant: 'destructive',
-    });
-    setIsModalOpen(false);
+  const handleReject = async (submissionId: string) => {
+    setProcessingId(submissionId);
+    try {
+      await submissionAPI.reject(submissionId);
+
+      setSubmissions(submissions.filter(s => s.id !== submissionId));
+
+      toast({
+        title: 'Submission Rejected',
+        description: 'The worker has been notified',
+        variant: 'destructive',
+      });
+    } catch (error: any) {
+      console.error('Failed to reject:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to reject submission',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+      setIsModalOpen(false);
+    }
   };
 
-  const openModal = (submission: typeof mockSubmissions[0]) => {
+  const openModal = (submission: Submission) => {
     setSelectedSubmission(submission);
     setIsModalOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -93,7 +148,7 @@ const BuyerHome = () => {
             <Coins className="w-5 h-5 text-primary-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-primary-foreground">{stats.totalPayments} Coins</p>
+            <p className="text-3xl font-bold text-primary-foreground">{stats.totalPayment} Coins</p>
           </CardContent>
         </Card>
       </div>
@@ -132,11 +187,30 @@ const BuyerHome = () => {
                             <Eye className="w-4 h-4 mr-1" />
                             View
                           </Button>
-                          <Button size="sm" variant="success" onClick={() => handleApprove(submission.id)}>
-                            <CheckCircle className="w-4 h-4" />
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => handleApprove(submission.id)}
+                            disabled={processingId === submission.id}
+                          >
+                            {processingId === submission.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4" />
+                            )}
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleReject(submission.id)}>
-                            <XCircle className="w-4 h-4" />
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleReject(submission.id)}
+                            disabled={processingId === submission.id}
+                          >
+                            {processingId === submission.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <XCircle className="w-4 h-4" />
+                            )}
                           </Button>
                         </div>
                       </td>
@@ -171,17 +245,34 @@ const BuyerHome = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Submission Details</p>
-                <p className="text-foreground bg-secondary p-3 rounded-lg mt-1">
+                <p className="text-foreground bg-secondary p-3 rounded-lg mt-1 whitespace-pre-wrap">
                   {selectedSubmission.submissionDetails}
                 </p>
               </div>
               <div className="flex gap-3 pt-4">
-                <Button className="flex-1" variant="success" onClick={() => handleApprove(selectedSubmission.id)}>
-                  <CheckCircle className="w-4 h-4 mr-2" />
+                <Button
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={() => handleApprove(selectedSubmission.id)}
+                  disabled={processingId === selectedSubmission.id}
+                >
+                  {processingId === selectedSubmission.id ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                  )}
                   Approve
                 </Button>
-                <Button className="flex-1" variant="destructive" onClick={() => handleReject(selectedSubmission.id)}>
-                  <XCircle className="w-4 h-4 mr-2" />
+                <Button
+                  className="flex-1"
+                  variant="destructive"
+                  onClick={() => handleReject(selectedSubmission.id)}
+                  disabled={processingId === selectedSubmission.id}
+                >
+                  {processingId === selectedSubmission.id ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <XCircle className="w-4 h-4 mr-2" />
+                  )}
                   Reject
                 </Button>
               </div>

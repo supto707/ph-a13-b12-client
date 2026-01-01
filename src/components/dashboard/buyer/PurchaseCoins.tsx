@@ -1,27 +1,46 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Coins, CreditCard, Check } from 'lucide-react';
+import { paymentAPI } from '@/lib/api';
+import { Coins, CreditCard, Check, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const coinPackages = [
-  { coins: 10, price: 1, popular: false },
-  { coins: 150, price: 10, popular: false },
-  { coins: 500, price: 20, popular: true },
-  { coins: 1000, price: 35, popular: false },
+  { id: 1, coins: 10, price: 1, popular: false },
+  { id: 2, coins: 150, price: 10, popular: false },
+  { id: 3, coins: 500, price: 20, popular: true },
+  { id: 4, coins: 1000, price: 35, popular: false },
 ];
 
 const PurchaseCoins = () => {
-  const { user, updateUserCoins } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
-  const handlePurchase = (coins: number, price: number) => {
-    // Simulate payment processing
-    updateUserCoins((user?.coins || 0) + coins);
-    toast({
-      title: 'Purchase Successful!',
-      description: `${coins} coins have been added to your account.`,
-    });
+  const handlePurchase = async (packageId: number, coins: number, price: number) => {
+    setProcessingId(packageId);
+
+    try {
+      // Dummy payment - in production, integrate with Stripe
+      await paymentAPI.process({ packageId });
+
+      await refreshUser();
+
+      toast({
+        title: 'Purchase Successful!',
+        description: `${coins} coins have been added to your account.`,
+      });
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Payment Failed',
+        description: error.response?.data?.error || 'Failed to process payment',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   return (
@@ -51,10 +70,9 @@ const PurchaseCoins = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {coinPackages.map((pkg, index) => (
           <Card
-            key={pkg.coins}
-            className={`shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1 relative overflow-hidden animate-slide-up stagger-${index + 1} ${
-              pkg.popular ? 'border-primary ring-2 ring-primary/20' : ''
-            }`}
+            key={pkg.id}
+            className={`shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1 relative overflow-hidden animate-slide-up stagger-${index + 1} ${pkg.popular ? 'border-primary ring-2 ring-primary/20' : ''
+              }`}
           >
             {pkg.popular && (
               <div className="absolute top-0 right-0 gradient-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
@@ -62,9 +80,8 @@ const PurchaseCoins = () => {
               </div>
             )}
             <CardHeader className="text-center pb-2">
-              <div className={`w-16 h-16 mx-auto mb-2 rounded-2xl flex items-center justify-center ${
-                pkg.popular ? 'gradient-primary shadow-glow' : 'bg-accent/10'
-              }`}>
+              <div className={`w-16 h-16 mx-auto mb-2 rounded-2xl flex items-center justify-center ${pkg.popular ? 'gradient-primary shadow-glow' : 'bg-accent/10'
+                }`}>
                 <Coins className={`w-8 h-8 ${pkg.popular ? 'text-primary-foreground' : 'text-accent'}`} />
               </div>
               <CardTitle className="font-display text-3xl">{pkg.coins}</CardTitle>
@@ -87,10 +104,15 @@ const PurchaseCoins = () => {
               <Button
                 className="w-full"
                 variant={pkg.popular ? 'default' : 'outline'}
-                onClick={() => handlePurchase(pkg.coins, pkg.price)}
+                onClick={() => handlePurchase(pkg.id, pkg.coins, pkg.price)}
+                disabled={processingId === pkg.id}
               >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Buy Now
+                {processingId === pkg.id ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CreditCard className="w-4 h-4 mr-2" />
+                )}
+                {processingId === pkg.id ? 'Processing...' : 'Buy Now'}
               </Button>
             </CardContent>
           </Card>

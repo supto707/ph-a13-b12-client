@@ -1,36 +1,72 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { Users, Briefcase, Coins, CreditCard, CheckCircle } from 'lucide-react';
+import { statsAPI, withdrawalAPI } from '@/lib/api';
+import { Users, Briefcase, Coins, CreditCard, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { Withdrawal } from '@/types';
 
-const mockWithdrawals = [
-  { id: 1, workerName: 'John Worker', workerEmail: 'john@test.com', withdrawalCoin: 400, withdrawalAmount: 20, paymentSystem: 'PayPal', status: 'pending' },
-  { id: 2, workerName: 'Jane Doe', workerEmail: 'jane@test.com', withdrawalCoin: 200, withdrawalAmount: 10, paymentSystem: 'bKash', status: 'pending' },
-  { id: 3, workerName: 'Mike Smith', workerEmail: 'mike@test.com', withdrawalCoin: 600, withdrawalAmount: 30, paymentSystem: 'Stripe', status: 'pending' },
-];
+interface AdminStats {
+  totalWorkers: number;
+  totalBuyers: number;
+  totalCoins: number;
+  totalPayments: number;
+}
 
 const AdminHome = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [withdrawals, setWithdrawals] = useState(mockWithdrawals);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [stats, setStats] = useState<AdminStats>({ totalWorkers: 0, totalBuyers: 0, totalCoins: 0, totalPayments: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Mock stats
-  const stats = {
-    totalWorkers: 1250,
-    totalBuyers: 340,
-    totalCoins: 125000,
-    totalPayments: 45000,
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsRes, withdrawalsRes] = await Promise.all([
+          statsAPI.getAdmin(),
+          withdrawalAPI.getPending()
+        ]);
+        setStats(statsRes.data);
+        setWithdrawals(withdrawalsRes.data);
+      } catch (error) {
+        console.error('Failed to fetch admin data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleApproveWithdrawal = async (withdrawalId: string) => {
+    setProcessingId(withdrawalId);
+    try {
+      await withdrawalAPI.approve(withdrawalId);
+      setWithdrawals(withdrawals.filter(w => w.id !== withdrawalId));
+      toast({
+        title: 'Withdrawal Approved',
+        description: 'The withdrawal has been processed successfully.',
+      });
+    } catch (error: any) {
+      console.error('Failed to approve withdrawal:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to approve withdrawal',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  const handleApproveWithdrawal = (withdrawalId: number) => {
-    setWithdrawals(withdrawals.filter(w => w.id !== withdrawalId));
-    toast({
-      title: 'Withdrawal Approved',
-      description: 'The withdrawal has been processed successfully.',
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -116,14 +152,19 @@ const AdminHome = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-foreground font-medium">${withdrawal.withdrawalAmount}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{withdrawal.paymentSystem}</td>
+                      <td className="py-3 px-4 text-muted-foreground capitalize">{withdrawal.paymentSystem}</td>
                       <td className="py-3 px-4">
                         <Button
                           size="sm"
-                          variant="success"
+                          className="bg-green-600 hover:bg-green-700 gap-1"
                           onClick={() => handleApproveWithdrawal(withdrawal.id)}
+                          disabled={processingId === withdrawal.id}
                         >
-                          <CheckCircle className="w-4 h-4 mr-1" />
+                          {processingId === withdrawal.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
                           Approve
                         </Button>
                       </td>

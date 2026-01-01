@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { taskAPI } from '@/lib/api';
 import { PlusCircle, Coins, Calendar, Users, Image, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 const AddTask = () => {
-  const { user, updateUserCoins } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +47,7 @@ const AddTask = () => {
 
     if (!hasEnoughCoins) {
       toast({
-        title: 'Insufficient Coins',
+        title: 'Not available Coin. Purchase Coin',
         description: 'You don\'t have enough coins. Please purchase more.',
         variant: 'destructive',
       });
@@ -55,20 +56,46 @@ const AddTask = () => {
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Deduct coins
-    updateUserCoins((user?.coins || 0) - totalCost);
+    try {
+      await taskAPI.create({
+        title: formData.title,
+        detail: formData.detail,
+        requiredWorkers: Number(formData.requiredWorkers),
+        payableAmount: Number(formData.payableAmount),
+        completionDate: formData.completionDate,
+        submissionInfo: formData.submissionInfo,
+        imageUrl: formData.imageUrl,
+      });
 
-    toast({
-      title: 'Task Created Successfully',
-      description: `Your task has been posted. ${totalCost} coins have been deducted.`,
-    });
+      await refreshUser();
 
-    setIsLoading(false);
-    navigate('/dashboard/my-tasks');
+      toast({
+        title: 'Task Created Successfully',
+        description: `Your task has been posted. ${totalCost} coins have been deducted.`,
+      });
+
+      navigate('/dashboard/my-tasks');
+    } catch (error: any) {
+      console.error('Failed to create task:', error);
+
+      if (error.response?.data?.insufficientCoins) {
+        toast({
+          title: 'Not available Coin. Purchase Coin',
+          description: 'Please purchase more coins to create this task.',
+          variant: 'destructive',
+        });
+        navigate('/dashboard/purchase-coins');
+      } else {
+        toast({
+          title: 'Error',
+          description: error.response?.data?.error || 'Failed to create task',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

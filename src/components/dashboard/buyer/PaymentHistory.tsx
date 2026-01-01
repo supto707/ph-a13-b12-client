@@ -1,20 +1,42 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Coins, Calendar, CreditCard } from 'lucide-react';
-
-const mockPayments = [
-  { id: 1, coinsPurchased: 500, amountPaid: 20, paymentDate: new Date('2024-01-25') },
-  { id: 2, coinsPurchased: 150, amountPaid: 10, paymentDate: new Date('2024-01-20') },
-  { id: 3, coinsPurchased: 1000, amountPaid: 35, paymentDate: new Date('2024-01-15') },
-  { id: 4, coinsPurchased: 10, amountPaid: 1, paymentDate: new Date('2024-01-10') },
-];
+import { paymentAPI } from '@/lib/api';
+import { Coins, Calendar, CreditCard, Loader2 } from 'lucide-react';
+import { Payment } from '@/types';
 
 const PaymentHistory = () => {
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const response = await paymentAPI.getHistory();
+        setPayments(response.data);
+      } catch (error) {
+        console.error('Failed to fetch payments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPayments();
+  }, []);
+
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const totalSpent = mockPayments.reduce((sum, p) => sum + p.amountPaid, 0);
-  const totalCoins = mockPayments.reduce((sum, p) => sum + p.coinsPurchased, 0);
+  const totalSpent = payments.reduce((sum, p) => sum + p.amountPaid, 0);
+  const totalCoins = payments.reduce((sum, p) => sum + p.coinsPurchased, 0);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -52,7 +74,7 @@ const PaymentHistory = () => {
           <CardTitle className="font-display">Transaction History</CardTitle>
         </CardHeader>
         <CardContent>
-          {mockPayments.length > 0 ? (
+          {payments.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -64,7 +86,7 @@ const PaymentHistory = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockPayments.map((payment) => (
+                  {payments.map((payment) => (
                     <tr key={payment.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 text-muted-foreground">
                         <div className="flex items-center gap-1.5">
