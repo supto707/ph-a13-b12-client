@@ -43,8 +43,9 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
   const [role, setRole] = useState<UserRole>('worker');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -90,7 +91,26 @@ const Register = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    const success = await register(name, email, password, photoUrl, role);
+
+    let finalPhotoUrl = '';
+    if (photoFile) {
+      setIsUploading(true);
+      try {
+        const { uploadImage } = await import('@/lib/api');
+        finalPhotoUrl = await uploadImage(photoFile);
+      } catch (error) {
+        console.error('Image upload failed', error);
+        toast({
+          title: 'Image Upload Failed',
+          description: 'Could not upload profile picture. Continuing without it.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
+    const success = await register(name, email, password, finalPhotoUrl, role);
     setIsLoading(false);
 
     if (success) {
@@ -209,16 +229,15 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="photoUrl">Profile Picture URL (optional)</Label>
+                  <Label htmlFor="photo">Profile Picture (optional)</Label>
                   <div className="relative">
                     <Image className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      id="photoUrl"
-                      type="url"
-                      placeholder="https://example.com/photo.jpg"
-                      value={photoUrl}
-                      onChange={(e) => setPhotoUrl(e.target.value)}
-                      className="pl-10"
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                      className="pl-10 file:text-foreground"
                     />
                   </div>
                 </div>
@@ -285,11 +304,11 @@ const Register = () => {
                   </p>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={isLoading || isUploading}>
+                  {isLoading || isUploading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating account...
+                      {isUploading ? 'Uploading Image...' : 'Creating account...'}
                     </>
                   ) : (
                     'Create Account'

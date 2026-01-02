@@ -23,8 +23,10 @@ const AddTask = () => {
     payableAmount: '',
     completionDate: '',
     submissionInfo: '',
-    imageUrl: '',
+    imageUrl: '', // This will still hold URL after upload
   });
+  const [taskImageFile, setTaskImageFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const totalCost = Number(formData.requiredWorkers || 0) * Number(formData.payableAmount || 0);
   const hasEnoughCoins = (user?.coins || 0) >= totalCost;
@@ -57,6 +59,23 @@ const AddTask = () => {
 
     setIsLoading(true);
 
+    let finalTaskImageUrl = formData.imageUrl;
+    if (taskImageFile) {
+      setIsUploading(true);
+      try {
+        const { uploadImage } = await import('@/lib/api');
+        finalTaskImageUrl = await uploadImage(taskImageFile);
+      } catch (error) {
+        toast({
+          title: 'Image Upload Warning',
+          description: 'Failed to upload task image. Task will be created without it.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
     try {
       await taskAPI.create({
         title: formData.title,
@@ -65,7 +84,7 @@ const AddTask = () => {
         payableAmount: Number(formData.payableAmount),
         completionDate: formData.completionDate,
         submissionInfo: formData.submissionInfo,
-        imageUrl: formData.imageUrl,
+        imageUrl: finalTaskImageUrl,
       });
 
       await refreshUser();
@@ -188,17 +207,15 @@ const AddTask = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="imageUrl">Task Image URL</Label>
+                <Label htmlFor="taskImage">Task Image (optional)</Label>
                 <div className="relative">
                   <Image className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    id="imageUrl"
-                    name="imageUrl"
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    value={formData.imageUrl}
-                    onChange={handleChange}
-                    className="pl-10"
+                    id="taskImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setTaskImageFile(e.target.files?.[0] || null)}
+                    className="pl-10 file:text-foreground"
                   />
                 </div>
               </div>
@@ -246,11 +263,11 @@ const AddTask = () => {
               </CardContent>
             </Card>
 
-            <Button type="submit" className="w-full" disabled={isLoading || (totalCost > 0 && !hasEnoughCoins)}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={isLoading || isUploading || (totalCost > 0 && !hasEnoughCoins)}>
+              {isLoading || isUploading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Creating Task...
+                  {isUploading ? 'Uploading Image...' : 'Creating Task...'}
                 </>
               ) : (
                 <>

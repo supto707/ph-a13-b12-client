@@ -117,4 +117,27 @@ export const statsAPI = {
     getWorker: () => api.get('/stats/worker'),
 };
 
+// Image Upload API
+export const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    // Get API Key from env
+    const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+
+    if (!apiKey || apiKey.includes('INSERT')) {
+        console.warn('ImgBB API Key is missing or invalid.');
+        // For demo/development purposes if key is missing, return a dummy URL or throw error
+        // throw new Error('ImgBB API Key is missing');
+    }
+
+    try {
+        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${apiKey}`, formData);
+        return response.data.data.url;
+    } catch (error) {
+        console.error('Image upload failed:', error);
+        throw error;
+    }
+};
+
 export default api;
