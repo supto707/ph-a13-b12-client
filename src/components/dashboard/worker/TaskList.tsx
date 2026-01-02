@@ -65,7 +65,7 @@ const TaskList = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTasks.map((task, index) => (
           <Card
-            key={task.id}
+            key={task._id}
             className={`shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up stagger-${index + 1}`}
           >
             <div className="relative h-40 overflow-hidden">
@@ -97,7 +97,7 @@ const TaskList = () => {
               <Button
                 className="w-full gap-2"
                 variant="default"
-                onClick={() => navigate(`/dashboard/task/${task.id}`)}
+                onClick={() => navigate(`/dashboard/task/${task._id}`)}
               >
                 <Eye className="w-4 h-4" />
                 View Details

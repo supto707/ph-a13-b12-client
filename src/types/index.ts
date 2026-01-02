@@ -1,7 +1,7 @@
 export type UserRole = 'worker' | 'buyer' | 'admin';
 
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   photoUrl: string;
@@ -11,7 +11,7 @@ export interface User {
 }
 
 export interface Task {
-  id: string;
+  _id: string;
   title: string;
   detail: string;
   requiredWorkers: number;
@@ -26,7 +26,7 @@ export interface Task {
 }
 
 export interface Submission {
-  id: string;
+  _id: string;
   taskId: string;
   taskTitle: string;
   payableAmount: number;
@@ -40,7 +40,7 @@ export interface Submission {
 }
 
 export interface Withdrawal {
-  id: string;
+  _id: string;
   workerEmail: string;
   workerName: string;
   withdrawalCoin: number;
@@ -52,7 +52,7 @@ export interface Withdrawal {
 }
 
 export interface Payment {
-  id: string;
+  _id: string;
   buyerEmail: string;
   buyerName: string;
   coinsPurchased: number;
@@ -61,7 +61,7 @@ export interface Payment {
 }
 
 export interface Notification {
-  id: string;
+  _id: string;
   message: string;
   toEmail: string;
   actionRoute: string;

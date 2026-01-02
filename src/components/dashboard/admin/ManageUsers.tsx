@@ -39,7 +39,7 @@ const ManageUsers = () => {
     setProcessingId(userId);
     try {
       await userAPI.updateRole(userId, newRole);
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
       toast({
         title: 'Role Updated',
         description: `User role has been changed to ${newRole}`,
@@ -64,7 +64,7 @@ const ManageUsers = () => {
     setProcessingId(userId);
     try {
       await userAPI.delete(userId);
-      setUsers(users.filter(u => u.id !== userId));
+      setUsers(users.filter(u => u._id !== userId));
       toast({
         title: 'User Deleted',
         description: 'The user has been removed from the platform',
@@ -131,7 +131,7 @@ const ManageUsers = () => {
                 </thead>
                 <tbody>
                   {users.map((user) => (
-                    <tr key={user.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={user._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
@@ -157,8 +157,8 @@ const ManageUsers = () => {
                         <div className="flex items-center gap-2">
                           <Select
                             value={user.role}
-                            onValueChange={(value: UserRole) => handleRoleChange(user.id, value)}
-                            disabled={processingId === user.id}
+                            onValueChange={(value: UserRole) => handleRoleChange(user._id, value)}
+                            disabled={processingId === user._id}
                           >
                             <SelectTrigger className="w-28 h-8 text-xs">
                               <SelectValue />
@@ -172,10 +172,10 @@ const ManageUsers = () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDeleteUser(user.id)}
-                            disabled={processingId === user.id}
+                            onClick={() => handleDeleteUser(user._id)}
+                            disabled={processingId === user._id}
                           >
-                            {processingId === user.id ? (
+                            {processingId === user._id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <Trash2 className="w-4 h-4" />

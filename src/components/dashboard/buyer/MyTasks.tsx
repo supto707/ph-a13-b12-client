@@ -52,15 +52,15 @@ const MyTasks = () => {
   const handleSaveEdit = async () => {
     if (!editingTask) return;
 
-    setProcessingId(editingTask.id);
+    setProcessingId(editingTask._id);
     try {
-      await taskAPI.update(editingTask.id, {
+      await taskAPI.update(editingTask._id, {
         title: editingTask.title,
         detail: editingTask.detail,
         submissionInfo: editingTask.submissionInfo,
       });
 
-      setTasks(tasks.map(t => t.id === editingTask.id ? editingTask : t));
+      setTasks(tasks.map(t => t._id === editingTask._id ? editingTask : t));
       toast({
         title: 'Task Updated',
         description: 'Your task has been updated successfully.',
@@ -139,7 +139,7 @@ const MyTasks = () => {
                 </thead>
                 <tbody>
                   {tasks.map((task) => (
-                    <tr key={task.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={task._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 text-foreground font-medium">{task.title}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1 text-muted-foreground">
@@ -165,17 +165,17 @@ const MyTasks = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(task)}
-                            disabled={processingId === task.id}
+                            disabled={processingId === task._id}
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDelete(task.id)}
-                            disabled={processingId === task.id}
+                            onClick={() => handleDelete(task._id)}
+                            disabled={processingId === task._id}
                           >
-                            {processingId === task.id ? (
+                            {processingId === task._id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <Trash2 className="w-4 h-4" />

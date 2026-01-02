@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { authAPI } from '@/lib/api';
-import { User, UserRole } from '@/types';
+import { UserRole, User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const response = await authAPI.verify();
           const userData = response.data.user;
           setUser({
-            id: userData.id,
+            _id: userData._id,
             name: userData.name,
             email: userData.email,
             photoUrl: userData.photoUrl,
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('microtask_user', JSON.stringify(userData));
 
       setUser({
-        id: userData.id,
+        _id: userData._id,
         name: userData.name,
         email: userData.email,
         photoUrl: userData.photoUrl,
@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('microtask_user', JSON.stringify(userData));
 
       setUser({
-        id: userData.id,
+        _id: userData._id,
         name: userData.name,
         email: userData.email,
         photoUrl: userData.photoUrl,
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('microtask_user', JSON.stringify(userData));
 
       setUser({
-        id: userData.id,
+        _id: userData._id,
         name: userData.name,
         email: userData.email,
         photoUrl: userData.photoUrl,
@@ -209,7 +209,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await authAPI.verify();
       const userData = response.data.user;
       const updatedUser = {
-        id: userData.id,
+        _id: userData._id,
         name: userData.name,
         email: userData.email,
         photoUrl: userData.photoUrl,

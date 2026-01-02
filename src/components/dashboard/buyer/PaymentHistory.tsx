@@ -87,7 +87,7 @@ const PaymentHistory = () => {
                 </thead>
                 <tbody>
                   {payments.map((payment) => (
-                    <tr key={payment.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={payment._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4" />
