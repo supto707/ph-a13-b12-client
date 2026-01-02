@@ -86,7 +86,7 @@ const MyTasks = () => {
     setProcessingId(taskId);
     try {
       const response = await taskAPI.delete(taskId);
-      setTasks(tasks.filter(t => t.id !== taskId));
+      setTasks(tasks.filter(t => t._id !== taskId));
       await refreshUser();
 
       toast({
@@ -231,9 +231,9 @@ const MyTasks = () => {
               <Button
                 className="w-full"
                 onClick={handleSaveEdit}
-                disabled={processingId === editingTask.id}
+                disabled={processingId === editingTask._id}
               >
-                {processingId === editingTask.id ? (
+                {processingId === editingTask._id ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : null}
                 Save Changes
