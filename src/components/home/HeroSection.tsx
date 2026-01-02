@@ -59,6 +59,7 @@ const HeroSection = () => {
           autoplay={{ delay: 6000, disableOnInteraction: false }}
           pagination={{
             clickable: true,
+            bulletClass: 'swiper-pagination-bullet', // Explicitly defined to avoid conflicts
             renderBullet: function (index, className) {
               return '<span class="' + className + '"></span>';
             }

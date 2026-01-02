@@ -15,6 +15,7 @@ import PaymentHistory from '@/components/dashboard/buyer/PaymentHistory';
 import AdminHome from '@/components/dashboard/admin/AdminHome';
 import ManageUsers from '@/components/dashboard/admin/ManageUsers';
 import ManageTasks from '@/components/dashboard/admin/ManageTasks';
+import Profile from "@/components/dashboard/Profile"; // Adjusted path to match existing conventions
 import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {

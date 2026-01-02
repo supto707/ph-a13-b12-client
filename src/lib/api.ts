@@ -46,9 +46,9 @@ export const authAPI = {
 // User API
 export const userAPI = {
     getAll: () => api.get('/users'),
-    getById: (id: string) => api.get(`/users/${id}`),
+    getUser: (id: string) => api.get(`/users/${id}`),
     updateRole: (id: string, role: string) => api.patch(`/users/${id}/role`, { role }),
-    delete: (id: string) => api.delete(`/users/${id}`),
+    updateProfile: (id: string, data: { name?: string; photoUrl?: string }) => api.patch(`/users/${id}`, data),
     getTopWorkers: () => api.get('/users/top/workers'),
 };
 

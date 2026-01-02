@@ -109,9 +109,11 @@ const Navbar = () => {
                         <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
                       </div>
                     </div>
-                    <DropdownMenuItem className="cursor-pointer gap-2 focus:bg-primary/10 focus:text-primary">
-                      <User className="w-4 h-4" />
-                      Profile
+                    <DropdownMenuItem className="cursor-pointer gap-2 focus:bg-primary/10 focus:text-primary" asChild>
+                      <Link to="/dashboard/profile">
+                        <User className="w-4 h-4" />
+                        Profile
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-primary/10" />
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10">
