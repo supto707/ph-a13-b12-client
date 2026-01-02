@@ -15,7 +15,7 @@ import PaymentHistory from '@/components/dashboard/buyer/PaymentHistory';
 import AdminHome from '@/components/dashboard/admin/AdminHome';
 import ManageUsers from '@/components/dashboard/admin/ManageUsers';
 import ManageTasks from '@/components/dashboard/admin/ManageTasks';
-import Profile from "@/components/dashboard/Profile"; // Adjusted path to match existing conventions
+import Profile from '@/components/dashboard/Profile';
 import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -57,6 +57,9 @@ const Dashboard = () => {
     <DashboardLayout>
       <Routes>
         <Route index element={<Navigate to={getDefaultRoute()} replace />} />
+
+        {/* Profile Route */}
+        <Route path="profile" element={<Profile />} />
 
         {/* Worker Routes */}
         <Route path="worker-home" element={<WorkerHome />} />
