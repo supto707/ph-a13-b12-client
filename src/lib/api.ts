@@ -50,6 +50,7 @@ export const userAPI = {
     updateRole: (id: string, role: string) => api.patch(`/users/${id}/role`, { role }),
     updateProfile: (id: string, data: { name?: string; photoUrl?: string }) => api.patch(`/users/${id}`, data),
     getTopWorkers: () => api.get('/users/top/workers'),
+    delete: (id: string) => api.delete(`/users/${id}`),
 };
 
 // Task API
