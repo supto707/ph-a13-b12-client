@@ -6,100 +6,74 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 25% 10%;
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
 
-    --primary: 174 72% 40%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 263 70% 50%;
+    /* Deep Violet */
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    --success: 142 71% 45%;
+    --success-foreground: 144 70% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 174 72% 40%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 263 70% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(174, 72%, 40%) 0%, hsl(186, 72%, 45%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(28, 92%, 55%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(220, 25%, 10%) 0%, hsl(220, 30%, 18%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 98%) 100%);
-    
-    --shadow-soft: 0 4px 20px -4px hsl(220 25% 10% / 0.08);
-    --shadow-medium: 0 8px 30px -6px hsl(220 25% 10% / 0.12);
-    --shadow-glow: 0 0 40px hsl(174 72% 40% / 0.25);
-    --shadow-accent-glow: 0 0 30px hsl(38 92% 50% / 0.3);
+    /* Custom Premium Tokens */
+    --glass-bg: 224 71% 4%;
+    --glass-border: 216 34% 17%;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 25% 10%;
-    --sidebar-primary: 174 72% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 25% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 174 72% 40%;
+    --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    --gradient-accent: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    --gradient-hero: linear-gradient(to bottom right, #0f172a, #1e1b4b);
+    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+
+    --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+    --shadow-medium: 0 20px 60px -15px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.4);
+    --shadow-accent-glow: 0 0 20px rgba(245, 158, 11, 0.3);
+
+    --sidebar-background: 224 71% 4%;
+    --sidebar-foreground: 213 31% 91%;
+    --sidebar-primary: 263 70% 50%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 222.2 47.4% 11.2%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 216 34% 17%;
+    --sidebar-ring: 263 70% 50%;
   }
 
   .dark {
-    --background: 220 25% 8%;
-    --foreground: 210 20% 98%;
+    /* Keeping same values as root since we are going for a default dark theme for now, 
+       but keeping the .dark selector for future light mode support */
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
 
-    --card: 220 25% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
 
-    --popover: 220 25% 12%;
-    --popover-foreground: 210 20% 98%;
-
-    --primary: 174 72% 45%;
-    --primary-foreground: 220 25% 10%;
-
-    --secondary: 220 20% 18%;
-    --secondary-foreground: 210 20% 98%;
-
-    --muted: 220 20% 18%;
-    --muted-foreground: 220 10% 60%;
-
-    --accent: 38 92% 55%;
-    --accent-foreground: 220 25% 10%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --success: 142 76% 42%;
-    --success-foreground: 0 0% 100%;
-
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 174 72% 45%;
-
-    --sidebar-background: 220 25% 10%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 174 72% 45%;
-    --sidebar-primary-foreground: 220 25% 10%;
-    --sidebar-accent: 220 20% 18%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 220 20% 20%;
-    --sidebar-ring: 174 72% 45%;
+    /* ... reuse root values ... */
   }
 }
 
@@ -113,7 +87,12 @@
     font-family: 'Inter', sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Sora', sans-serif;
   }
 }
@@ -156,8 +135,12 @@
     background: var(--gradient-primary);
   }
 
-  .glass-effect {
-    @apply backdrop-blur-md bg-card/80 border border-border/50;
+  .glass-panel {
+    @apply backdrop-blur-xl bg-background/60 border border-white/5 shadow-xl;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-md bg-card/40 border border-white/5 shadow-lg transition-all duration-300 hover:bg-card/60 hover:shadow-glow;
   }
 
   .coin-badge {
@@ -165,6 +148,15 @@
     background: var(--gradient-accent);
     color: hsl(var(--accent-foreground));
     box-shadow: var(--shadow-accent-glow);
+  }
+
+  /* Swiper Custom Styles */
+  .swiper-pagination-bullet {
+    @apply bg-white/20 opacity-100 transition-all duration-300 w-2 h-2 rounded-full;
+  }
+
+  .swiper-pagination-bullet-active {
+    @apply bg-primary w-8;
   }
 }
 
@@ -197,17 +189,41 @@
     animation: bounceGentle 2s ease-in-out infinite;
   }
 
-  .stagger-1 { animation-delay: 0.1s; }
-  .stagger-2 { animation-delay: 0.2s; }
-  .stagger-3 { animation-delay: 0.3s; }
-  .stagger-4 { animation-delay: 0.4s; }
-  .stagger-5 { animation-delay: 0.5s; }
-  .stagger-6 { animation-delay: 0.6s; }
+  .stagger-1 {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.2s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.3s;
+  }
+
+  .stagger-4 {
+    animation-delay: 0.4s;
+  }
+
+  .stagger-5 {
+    animation-delay: 0.5s;
+  }
+
+  .stagger-6 {
+    animation-delay: 0.6s;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 @keyframes slideUp {
@@ -215,6 +231,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -226,6 +243,7 @@
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -233,8 +251,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
@@ -242,6 +265,7 @@
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -249,8 +273,15 @@
 }
 
 @keyframes bounceGentle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 /* Custom scrollbar */

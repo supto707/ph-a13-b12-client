@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import RoleSelection from "./pages/RoleSelection";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import PublicRoute from "./components/routes/PublicRoute";
 
 const queryClient = new QueryClient();
 
@@ -22,9 +23,14 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/select-role" element={<RoleSelection />} />
+
+            {/* Public Routes - Only accessible when NOT logged in */}
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/select-role" element={<RoleSelection />} />
+            </Route>
+
             <Route path="/dashboard/*" element={<Dashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
