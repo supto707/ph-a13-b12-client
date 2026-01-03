@@ -105,7 +105,7 @@ const WorkerHome = () => {
                 </thead>
                 <tbody>
                   {approvedSubmissions.map((submission) => (
-                    <tr key={submission.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={submission._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 text-foreground">{submission.taskTitle}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1 text-foreground">

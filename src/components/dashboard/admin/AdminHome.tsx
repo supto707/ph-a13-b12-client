@@ -43,16 +43,16 @@ const AdminHome = () => {
     setProcessingId(withdrawalId);
     try {
       await withdrawalAPI.approve(withdrawalId);
-      setWithdrawals(withdrawals.filter(w => w.id !== withdrawalId));
+      setWithdrawals(withdrawals.filter(w => w._id !== withdrawalId));
       toast({
         title: 'Withdrawal Approved',
         description: 'The withdrawal has been processed successfully.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to approve withdrawal:', error);
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to approve withdrawal',
+        description: (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to approve withdrawal',
         variant: 'destructive',
       });
     } finally {
@@ -138,7 +138,7 @@ const AdminHome = () => {
                 </thead>
                 <tbody>
                   {withdrawals.map((withdrawal) => (
-                    <tr key={withdrawal.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={withdrawal._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium text-foreground">{withdrawal.workerName}</p>
@@ -157,10 +157,10 @@ const AdminHome = () => {
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 gap-1"
-                          onClick={() => handleApproveWithdrawal(withdrawal.id)}
-                          disabled={processingId === withdrawal.id}
+                          onClick={() => handleApproveWithdrawal(withdrawal._id)}
+                          disabled={processingId === withdrawal._id}
                         >
-                          {processingId === withdrawal.id ? (
+                          {processingId === withdrawal._id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <CheckCircle className="w-4 h-4" />

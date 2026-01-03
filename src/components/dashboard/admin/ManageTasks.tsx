@@ -39,17 +39,17 @@ const ManageTasks = () => {
     setProcessingId(taskId);
     try {
       await taskAPI.delete(taskId);
-      setTasks(tasks.filter(t => t.id !== taskId));
+      setTasks(tasks.filter(t => t._id !== taskId));
       toast({
         title: 'Task Deleted',
         description: 'The task has been removed from the platform',
         variant: 'destructive',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete task:', error);
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to delete task',
+        description: (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to delete task',
         variant: 'destructive',
       });
     } finally {
@@ -96,7 +96,7 @@ const ManageTasks = () => {
                 </thead>
                 <tbody>
                   {tasks.map((task) => (
-                    <tr key={task.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={task._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 text-foreground font-medium">{task.title}</td>
                       <td className="py-3 px-4 text-muted-foreground">{task.buyerName}</td>
                       <td className="py-3 px-4">
@@ -121,10 +121,10 @@ const ManageTasks = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleDeleteTask(task.id)}
-                          disabled={processingId === task.id}
+                          onClick={() => handleDeleteTask(task._id)}
+                          disabled={processingId === task._id}
                         >
-                          {processingId === task.id ? (
+                          {processingId === task._id ? (
                             <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                           ) : (
                             <Trash2 className="w-4 h-4 mr-1" />

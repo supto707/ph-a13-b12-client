@@ -53,8 +53,8 @@ const BuyerHome = () => {
     try {
       await submissionAPI.approve(submissionId);
 
-      const submission = submissions.find(s => s.id === submissionId);
-      setSubmissions(submissions.filter(s => s.id !== submissionId));
+      const submission = submissions.find(s => s._id === submissionId);
+      setSubmissions(submissions.filter(s => s._id !== submissionId));
 
       toast({
         title: 'Submission Approved',
@@ -62,11 +62,11 @@ const BuyerHome = () => {
       });
 
       await refreshUser();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to approve:', error);
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to approve submission',
+        description: (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to approve submission',
         variant: 'destructive',
       });
     } finally {
@@ -80,18 +80,18 @@ const BuyerHome = () => {
     try {
       await submissionAPI.reject(submissionId);
 
-      setSubmissions(submissions.filter(s => s.id !== submissionId));
+      setSubmissions(submissions.filter(s => s._id !== submissionId));
 
       toast({
         title: 'Submission Rejected',
         description: 'The worker has been notified',
         variant: 'destructive',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to reject:', error);
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to reject submission',
+        description: (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to reject submission',
         variant: 'destructive',
       });
     } finally {
@@ -172,7 +172,7 @@ const BuyerHome = () => {
                 </thead>
                 <tbody>
                   {submissions.map((submission) => (
-                    <tr key={submission.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={submission._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 text-foreground">{submission.workerName}</td>
                       <td className="py-3 px-4 text-foreground">{submission.taskTitle}</td>
                       <td className="py-3 px-4">
@@ -191,10 +191,10 @@ const BuyerHome = () => {
                             size="sm"
                             variant="default"
                             className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleApprove(submission.id)}
-                            disabled={processingId === submission.id}
+                            onClick={() => handleApprove(submission._id)}
+                            disabled={processingId === submission._id}
                           >
-                            {processingId === submission.id ? (
+                            {processingId === submission._id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <CheckCircle className="w-4 h-4" />
@@ -203,10 +203,10 @@ const BuyerHome = () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleReject(submission.id)}
-                            disabled={processingId === submission.id}
+                            onClick={() => handleReject(submission._id)}
+                            disabled={processingId === submission._id}
                           >
-                            {processingId === submission.id ? (
+                            {processingId === submission._id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <XCircle className="w-4 h-4" />
@@ -252,10 +252,10 @@ const BuyerHome = () => {
               <div className="flex gap-3 pt-4">
                 <Button
                   className="flex-1 bg-green-600 hover:bg-green-700"
-                  onClick={() => handleApprove(selectedSubmission.id)}
-                  disabled={processingId === selectedSubmission.id}
+                  onClick={() => handleApprove(selectedSubmission._id)}
+                  disabled={processingId === selectedSubmission._id}
                 >
-                  {processingId === selectedSubmission.id ? (
+                  {processingId === selectedSubmission._id ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <CheckCircle className="w-4 h-4 mr-2" />
@@ -265,10 +265,10 @@ const BuyerHome = () => {
                 <Button
                   className="flex-1"
                   variant="destructive"
-                  onClick={() => handleReject(selectedSubmission.id)}
-                  disabled={processingId === selectedSubmission.id}
+                  onClick={() => handleReject(selectedSubmission._id)}
+                  disabled={processingId === selectedSubmission._id}
                 >
-                  {processingId === selectedSubmission.id ? (
+                  {processingId === selectedSubmission._id ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <XCircle className="w-4 h-4 mr-2" />

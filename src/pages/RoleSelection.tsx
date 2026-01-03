@@ -27,7 +27,7 @@ const RoleSelection = () => {
 
         setIsLoading(true);
         try {
-            await userAPI.updateRole(user.id, selectedRole);
+            await userAPI.updateRole(user._id, selectedRole);
             await refreshUser();
             localStorage.removeItem('pending_role_selection');
 
@@ -37,11 +37,11 @@ const RoleSelection = () => {
             });
 
             navigate('/dashboard');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to set role:', error);
             toast({
                 title: 'Error',
-                description: error.response?.data?.error || 'Failed to set your role',
+                description: (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to set your role',
                 variant: 'destructive',
             });
         } finally {
@@ -102,8 +102,8 @@ const RoleSelection = () => {
                                 key={role.id}
                                 onClick={() => setSelectedRole(role.id)}
                                 className={`cursor-pointer transition-all duration-300 hover:shadow-medium hover:-translate-y-1 ${selectedRole === role.id
-                                        ? 'ring-2 ring-primary shadow-glow'
-                                        : 'border-border/50'
+                                    ? 'ring-2 ring-primary shadow-glow'
+                                    : 'border-border/50'
                                     }`}
                             >
                                 <CardHeader>

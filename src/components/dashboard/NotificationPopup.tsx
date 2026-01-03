@@ -43,7 +43,7 @@ const NotificationPopup = ({ onClose }: NotificationPopupProps) => {
 
     const handleNotificationClick = async (notification: Notification) => {
         try {
-            await notificationAPI.markAsRead(notification.id);
+            await notificationAPI.markAsRead(notification._id);
             navigate(notification.actionRoute);
             onClose();
         } catch (error) {
@@ -107,7 +107,7 @@ const NotificationPopup = ({ onClose }: NotificationPopupProps) => {
                 ) : (
                     notifications.map((notification) => (
                         <div
-                            key={notification.id}
+                            key={notification._id}
                             onClick={() => handleNotificationClick(notification)}
                             className={`p-4 border-b cursor-pointer hover:bg-secondary/50 transition-colors ${!notification.read ? 'bg-primary/5' : ''
                                 }`}

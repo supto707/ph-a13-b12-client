@@ -78,11 +78,11 @@ const Withdrawals = () => {
       setCoinToWithdraw('');
       setPaymentSystem('');
       setAccountNumber('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Withdrawal error:', error);
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to submit withdrawal request',
+        description: (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to submit withdrawal request',
         variant: 'destructive',
       });
     } finally {
@@ -260,7 +260,7 @@ const Withdrawals = () => {
                 </thead>
                 <tbody>
                   {withdrawals.map((withdrawal) => (
-                    <tr key={withdrawal.id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
+                    <tr key={withdrawal._id} className="border-b last:border-0 hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 text-muted-foreground">{formatDate(withdrawal.createdAt)}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1">
@@ -272,8 +272,8 @@ const Withdrawals = () => {
                       <td className="py-3 px-4 text-muted-foreground capitalize">{withdrawal.paymentSystem}</td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium capitalize ${withdrawal.status === 'approved'
-                            ? 'bg-success/10 text-success'
-                            : 'bg-accent/10 text-accent'
+                          ? 'bg-success/10 text-success'
+                          : 'bg-accent/10 text-accent'
                           }`}>
                           {withdrawal.status === 'approved' ? (
                             <CheckCircle className="w-3 h-3" />
