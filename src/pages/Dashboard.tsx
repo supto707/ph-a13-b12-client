@@ -15,6 +15,7 @@ import PaymentHistory from '@/components/dashboard/buyer/PaymentHistory';
 import AdminHome from '@/components/dashboard/admin/AdminHome';
 import ManageUsers from '@/components/dashboard/admin/ManageUsers';
 import ManageTasks from '@/components/dashboard/admin/ManageTasks';
+import ManageReports from '@/components/dashboard/admin/ManageReports';
 import Profile from '@/components/dashboard/Profile';
 import { Loader2 } from 'lucide-react';
 
@@ -79,6 +80,7 @@ const Dashboard = () => {
         <Route path="admin-home" element={<AdminHome />} />
         <Route path="manage-users" element={<ManageUsers />} />
         <Route path="manage-tasks" element={<ManageTasks />} />
+        <Route path="manage-reports" element={<ManageReports />} />
       </Routes>
     </DashboardLayout>
   );

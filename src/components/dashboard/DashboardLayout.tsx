@@ -28,6 +28,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NotificationPopup from './NotificationPopup';
@@ -81,6 +82,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { label: 'Home', icon: Home, path: '/dashboard/admin-home' },
     { label: 'Manage Users', icon: Users, path: '/dashboard/manage-users' },
     { label: 'Manage Tasks', icon: Settings, path: '/dashboard/manage-tasks' },
+    { label: 'Manage Reports', icon: AlertTriangle, path: '/dashboard/manage-reports' },
   ];
 
   const getNavItems = () => {

@@ -2,14 +2,24 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { statsAPI, submissionAPI } from '@/lib/api';
-import { ClipboardList, Clock, Coins, CheckCircle, XCircle, Eye, Loader2 } from 'lucide-react';
+import { statsAPI, submissionAPI, reportAPI } from '@/lib/api';
+import { ClipboardList, Clock, Coins, CheckCircle, XCircle, Eye, Loader2, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Submission } from '@/types';
 
@@ -25,9 +35,16 @@ const BuyerHome = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [stats, setStats] = useState<BuyerStats>({ totalTasks: 0, pendingTasks: 0, totalPayment: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Report Form State
+  const [reportData, setReportData] = useState({
+    reason: '',
+    details: ''
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -100,9 +117,51 @@ const BuyerHome = () => {
     }
   };
 
+  const handleReport = async () => {
+    if (!selectedSubmission || !reportData.reason || !reportData.details) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all report details',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setProcessingId(selectedSubmission._id);
+    try {
+      await reportAPI.create({
+        submissionId: selectedSubmission._id,
+        reason: reportData.reason,
+        details: reportData.details
+      });
+
+      toast({
+        title: 'Report Submitted',
+        description: 'Admin will review this submission soon.'
+      });
+
+      setIsReportModalOpen(false);
+      setReportData({ reason: '', details: '' });
+    } catch (error: any) {
+      console.error('Failed to submit report:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to submit report',
+        variant: 'destructive'
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const openModal = (submission: Submission) => {
     setSelectedSubmission(submission);
     setIsModalOpen(true);
+  };
+
+  const openReportModal = (submission: Submission) => {
+    setSelectedSubmission(submission);
+    setIsReportModalOpen(true);
   };
 
   if (isLoading) {
@@ -186,6 +245,14 @@ const BuyerHome = () => {
                           <Button size="sm" variant="outline" onClick={() => openModal(submission)}>
                             <Eye className="w-4 h-4 mr-1" />
                             View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                            onClick={() => openReportModal(submission)}
+                          >
+                            <AlertTriangle className="w-4 h-4" />
                           </Button>
                           <Button
                             size="sm"
@@ -278,6 +345,69 @@ const BuyerHome = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Modal */}
+      <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              Report Submission
+            </DialogTitle>
+            <DialogDescription>
+              Reporting a submission will alert the Admin to review it for potential fraud or spam.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason for Report</Label>
+              <Select
+                value={reportData.reason}
+                onValueChange={(val) => setReportData({ ...reportData, reason: val })}
+              >
+                <SelectTrigger id="reason">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Spam">Spam</SelectItem>
+                  <SelectItem value="Incorrect Work">Incorrect Work</SelectItem>
+                  <SelectItem value="Inappropriate Content">Inappropriate Content</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="details">Additional Details</Label>
+              <Textarea
+                id="details"
+                placeholder="Provide more information about why you're reporting this submission..."
+                value={reportData.details}
+                onChange={(e) => setReportData({ ...reportData, details: e.target.value })}
+                rows={4}
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setIsReportModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleReport}
+              disabled={processingId === selectedSubmission?._id || !reportData.reason || !reportData.details}
+            >
+              {processingId === selectedSubmission?._id ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
+              Submit Report
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

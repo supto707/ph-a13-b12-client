@@ -63,7 +63,8 @@ export const userAPI = {
 
 // Task API
 export const taskAPI = {
-    getAvailable: () => api.get('/tasks'),
+    getAvailable: (sort?: string, search?: string) =>
+        api.get('/tasks', { params: { sort, search } }),
     getAll: () => api.get('/tasks/all'),
     getBuyerTasks: () => api.get('/tasks/buyer'),
     getById: (id: string) => api.get(`/tasks/${id}`),
@@ -117,6 +118,15 @@ export const notificationAPI = {
     getUnreadCount: () => api.get('/notifications/unread-count'),
     markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
     markAllAsRead: () => api.patch('/notifications/read-all'),
+};
+
+// Report API
+export const reportAPI = {
+    create: (data: { submissionId: string; reason: string; details: string }) =>
+        api.post('/reports', data),
+    getAll: () => api.get('/reports'),
+    updateStatus: (id: string, status: 'resolved' | 'dismissed') =>
+        api.patch(`/reports/${id}`, { status }),
 };
 
 // Stats API
