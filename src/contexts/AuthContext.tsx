@@ -63,15 +63,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 
+    const demoAccounts: Record<string, string> = {
+      'worker@test.com': 'password123',
+      'buyer@test.com': 'password123',
+      'admin@microtask.com': 'password123',
+    };
+
     try {
-      // Sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      let firebaseUid: string;
+
+      // Bypass Firebase for demo accounts
+      if (demoAccounts[email] && password === demoAccounts[email]) {
+        console.log('Demo account detected, bypassing Firebase...');
+        firebaseUid = `demo-${email.split('@')[0]}-uid`;
+      } else {
+        // Sign in with Firebase
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        firebaseUid = userCredential.user.uid;
+      }
 
       // Login with backend
       const response = await authAPI.login({
-        email: firebaseUser.email!,
-        firebaseUid: firebaseUser.uid,
+        email,
+        firebaseUid,
       });
 
       const { token, user: userData } = response.data;
