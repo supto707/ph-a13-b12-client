@@ -169,12 +169,12 @@ const Login = () => {
                 </Link>
               </p>
 
-              <div className="mt-4 p-3 rounded-lg bg-secondary/50 text-xs text-muted-foreground">
+              {/* <div className="mt-4 p-3 rounded-lg bg-secondary/50 text-xs text-muted-foreground">
                 <p className="font-medium mb-1">Demo Accounts:</p>
                 <p>Worker: worker@test.com / password123</p>
                 <p>Buyer: buyer@test.com / password123</p>
                 <p>Admin: admin@microtask.com / password123</p>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>
