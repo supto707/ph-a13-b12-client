@@ -72,10 +72,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       let firebaseUid: string;
 
+      const loginEmail = email.trim().toLowerCase();
       // Bypass Firebase for demo accounts
-      if (demoAccounts[email] && password === demoAccounts[email]) {
+      if (demoAccounts[loginEmail] && password === demoAccounts[loginEmail]) {
         console.log('Demo account detected, bypassing Firebase...');
-        firebaseUid = `demo-${email.split('@')[0]}-uid`;
+        firebaseUid = `demo-${loginEmail.split('@')[0]}-uid`;
       } else {
         // Sign in with Firebase
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
