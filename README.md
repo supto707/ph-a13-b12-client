@@ -1,73 +1,37 @@
-# Welcome to your Lovable project
+# MicroTask - Premium Micro-Tasking Platform
 
-## Project info
+MicroTask is a feature-rich platform connecting Workers and Buyers. Workers can earn coins by completing small tasks, while Buyers can post tasks and manage submissions through a sleek, responsive dashboard.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🌐 Live Site
+[Live Demo URL](https://ph-a13-b12-client.vercel.app)
 
-## How can I edit this code?
+## 🔑 Demo Credentials
+- **Admin**: `admin1@gmail.com` / `admin123`
 
-There are several ways of editing your application.
 
-**Use Lovable**
+## 🚀 Key Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+1.  **Role-Based Dashboards**: Tailored experiences for Workers, Buyers, and Admins.
+2.  **Dynamic Task Management**: Buyers can create, edit, and delete tasks with real-time coin deduction.
+3.  **Advanced Filtering**: Workers can search tasks by title and sort by rewards or deadlines.
+4.  **Submission System**: Detailed submission flow with image proof and status tracking (Pending/Approved/Rejected).
+5.  **Payment Integration**: Dummy payment system using Stripe/Coin simulation for buying platform credits.
+6.  **Secure Authentication**: Firebase integration with Google Login and manual registration bypass for demo accounts.
+7.  **Dynamic Leaderboard**: Real-time "Best Workers" section on the homepage highlighting top earners.
+8.  **Internal Notification System**: Real-time alerts for task updates, coin earns, and system messages.
+9.  **Reporting System**: Robust mechanism for buyers to flag invalid work for administrative review.
+10. **Withdrawal System**: Workers can request coin-to-currency withdrawals once they reach the minimum threshold.
+11. **Comprehensive Admin Panel**: Full control over users, tasks, withdrawal requests, and reported submissions.
+12. **Premium Design**: Modern, responsive UI with dark mode support, glassmorphism, and smooth animations.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
+- **Frontend**: React, TypeScript, TailwindCSS, Shadcn UI, Framer Motion
+- **Backend**: Node.js, Express, MongoDB, Mongoose
+- **Auth**: Firebase / JWT
+- **Deployment**: Vercel
 
-**Use your preferred IDE**
+## 📱 Responsiveness
+MicroTask is fully optimized for Mobile, Tablet, and Desktop views. The dashboard sidebar and navigation elements automatically adapt to provide a premium experience on any device.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+© 2026 MicroTask. All rights reserved.

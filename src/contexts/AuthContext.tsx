@@ -36,9 +36,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (token && storedUser) {
         try {
-          // Verify token with backend
-          const response = await authAPI.verify();
-          const userData = response.data.user;
+          // Immediately set user from stored data to avoid redirect on reload
+          const userData = JSON.parse(storedUser);
           setUser({
             _id: userData._id,
             name: userData.name,
@@ -48,10 +47,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             coins: userData.coins,
             createdAt: new Date(userData.createdAt),
           });
+
+          // Verify token with backend to refresh data and ensure validity
+          const response = await authAPI.verify();
+          const freshData = response.data.user;
+          setUser({
+            _id: freshData._id,
+            name: freshData.name,
+            email: freshData.email,
+            photoUrl: freshData.photoUrl,
+            role: freshData.role,
+            coins: freshData.coins,
+            createdAt: new Date(freshData.createdAt),
+          });
         } catch (error) {
+          console.error('Auth verification failed:', error);
           // Token invalid, clear storage
           localStorage.removeItem('microtask_token');
           localStorage.removeItem('microtask_user');
+          setUser(null);
         }
       }
       setIsLoading(false);
