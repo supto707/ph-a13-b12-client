@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { paymentAPI } from '@/lib/api';
-import { Coins, CreditCard, Check, Loader2 } from 'lucide-react';
+import { Coins, CreditCard, Check, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import CheckoutForm from './CheckoutForm';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const coinPackages = [
   { id: 1, coins: 10, price: 1, popular: false },
@@ -17,30 +29,33 @@ const PurchaseCoins = () => {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [selectedPkg, setSelectedPkg] = useState<typeof coinPackages[0] | null>(null);
 
-  const handlePurchase = async (packageId: number, coins: number, price: number) => {
-    setProcessingId(packageId);
+  const handlePackageSelect = async (pkg: typeof coinPackages[0]) => {
+    setProcessingId(pkg.id);
+    setSelectedPkg(pkg);
 
     try {
-      // Dummy payment - in production, integrate with Stripe
-      await paymentAPI.process({ packageId });
-
-      await refreshUser();
-
-      toast({
-        title: 'Purchase Successful!',
-        description: `${coins} coins have been added to your account.`,
-      });
+      const response = await paymentAPI.createPaymentIntent({ packageId: pkg.id });
+      setClientSecret(response.data.clientSecret);
     } catch (error: any) {
-      console.error('Payment error:', error);
+      console.error('Payment intent error:', error);
       toast({
-        title: 'Payment Failed',
-        description: error.response?.data?.error || 'Failed to process payment',
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to initialize payment',
         variant: 'destructive',
       });
+      setSelectedPkg(null);
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const handlePaymentSuccess = async () => {
+    setClientSecret(null);
+    setSelectedPkg(null);
+    await refreshUser();
   };
 
   return (
@@ -104,7 +119,7 @@ const PurchaseCoins = () => {
               <Button
                 className="w-full"
                 variant={pkg.popular ? 'default' : 'outline'}
-                onClick={() => handlePurchase(pkg.id, pkg.coins, pkg.price)}
+                onClick={() => handlePackageSelect(pkg)}
                 disabled={processingId === pkg.id}
               >
                 {processingId === pkg.id ? (
@@ -112,12 +127,37 @@ const PurchaseCoins = () => {
                 ) : (
                   <CreditCard className="w-4 h-4 mr-2" />
                 )}
-                {processingId === pkg.id ? 'Processing...' : 'Buy Now'}
+                {processingId === pkg.id ? 'Loading...' : 'Buy Now'}
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Stripe Payment Dialog */}
+      <Dialog open={!!clientSecret} onOpenChange={(open) => !open && setClientSecret(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Complete Purchase</DialogTitle>
+            <DialogDescription>
+              Purchase {selectedPkg?.coins} coins for ${selectedPkg?.price}
+            </DialogDescription>
+          </DialogHeader>
+
+          {clientSecret && selectedPkg && (
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <CheckoutForm
+                clientSecret={clientSecret}
+                packageId={selectedPkg.id}
+                coins={selectedPkg.coins}
+                price={selectedPkg.price}
+                onSuccess={handlePaymentSuccess}
+                onCancel={() => setClientSecret(null)}
+              />
+            </Elements>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Payment Info */}
       <Card className="shadow-soft border-muted">
@@ -129,7 +169,7 @@ const PurchaseCoins = () => {
             <div>
               <h3 className="font-semibold text-foreground mb-1">Secure Payments</h3>
               <p className="text-sm text-muted-foreground">
-                All payments are processed securely. We accept all major credit cards and PayPal.
+                All payments are processed securely by Stripe. We accept all major credit cards.
                 Your payment information is encrypted and never stored on our servers.
               </p>
             </div>

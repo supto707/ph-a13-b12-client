@@ -106,8 +106,10 @@ export const withdrawalAPI = {
 // Payment API
 export const paymentAPI = {
     getPackages: () => api.get('/payments/packages'),
-    process: (data: { packageId: number; cardNumber?: string; expiryDate?: string; cvv?: string }) =>
-        api.post('/payments/process', data),
+    createPaymentIntent: (data: { packageId: number }) =>
+        api.post('/payments/create-payment-intent', data),
+    confirmPayment: (data: { paymentIntentId: string; packageId: number }) =>
+        api.post('/payments/confirm-payment', data),
     getHistory: () => api.get('/payments/history'),
     getTotal: () => api.get('/payments/total'),
 };
